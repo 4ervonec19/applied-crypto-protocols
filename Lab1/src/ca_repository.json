@@ -1,0 +1,41 @@
+[
+  {
+    "serial_number": 1,
+    "signature_algorithm": "GOST-512",
+    "issuer": "Test-CA-lab-1",
+    "validity": {
+      "not_before": "2026-02-28T19:27:32.071130",
+      "not_after": "2027-02-28T19:27:32.071130"
+    },
+    "subject": "Alice",
+    "subject_public_key_algorithm": "ECDH",
+    "subject_public_key": "0ae7b69a069e276d08256317779fcde89ac4d3dc93cac67d87eea5b46d2bed82a21e2fb5c01783a1e3931e10f4e6ed0cd473727622d64ab4d4bc86a4ffed856c",
+    "signature": "a39f6ecb2407d08af31230f3429111cb372ac39e9a44f1c6acbef8a8dabb7c1b747ce148fc98634012e6410219beddd6ddf61a6c7f4172d2d752eaa93518ea0a"
+  },
+  {
+    "serial_number": 2,
+    "signature_algorithm": "GOST-512",
+    "issuer": "Test-CA-lab-1",
+    "validity": {
+      "not_before": "2026-02-28T19:27:32.107023",
+      "not_after": "2027-02-28T19:27:32.107023"
+    },
+    "subject": "Bob",
+    "subject_public_key_algorithm": "ECDH",
+    "subject_public_key": "40d38e40ca7a6f5d53524e7224997908c92f0a8665948366290cae1193ce80b9c1e7c4568472018a365b7a93f69e56b056229aae8683e0bb2e58914e2b18c574",
+    "signature": "edaabba82eddedaa88db3ffcc1e4b2912613128490e41dd34da3dce3d1a1cd7a82e6c4442f6711dc0d5909901261d118fa257d54a3b5a75582313b442251a04c"
+  },
+  {
+    "serial_number": 3,
+    "signature_algorithm": "GOST-512",
+    "issuer": "Test-CA-lab-1",
+    "validity": {
+      "not_before": "2026-02-28T19:27:32.143301",
+      "not_after": "2027-02-28T19:27:32.143301"
+    },
+    "subject": "Eve",
+    "subject_public_key_algorithm": "ECDH",
+    "subject_public_key": "529ba343c6133b3189325e1a5791e5ddf10c562427c73c9f68258160974c8777b043d28060a77b2ee7a68bebd3131557ed647a7d93021954553c7e22f645442c",
+    "signature": "7edf41c6a185c0f826c2f97ee73e6d74bb37e7897436067206337d14c9f61f3accb3b1ebedc8b23ac0ee56cfabbc4f8d226fda6f46b8c0ff5c269f2b89fc33eb"
+  }
+]

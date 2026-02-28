@@ -1,0 +1,14 @@
+{
+  "signature_algorithm": "ГОСТ-512",
+  "issuer": "Test-CA-lab-1",
+  "this_update": "2026-02-28T19:27:32.785448",
+  "next_update": "2026-03-07T19:27:32.785448",
+  "revoked_certificates": [
+    {
+      "serial_number": 3,
+      "revocation_date": "2026-02-28T19:27:32.715757",
+      "reason": "KEY COMPROMISE"
+    }
+  ],
+  "signature": "6266a1d6e8f449cc3639b7a8f7d2e6afda8652191b3035167de569805325af633114a95e958596ee0c00df465dab75be9d26099505f54ac416e31b26086aa04c"
+}
