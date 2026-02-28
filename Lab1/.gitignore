@@ -2,3 +2,4 @@ venv/
 assets/ПК-1-2025-26-Лаб-практикум-лр1-4.txt
 assets/README.*
 __pycache__/
+.DS_Store
