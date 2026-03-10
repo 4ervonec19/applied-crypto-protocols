@@ -102,7 +102,7 @@ class CertificateAuthority:
     def verify_signature(self, data_bytes, signature, public_key):
         """
         Verify signature using GOST 34.10-2012
-       
+
         :param data_bytes: original data (bytes)
         :param signature: signature to verify (bytearray)
         :param public_key: public key for verification (bytearray)
@@ -117,6 +117,115 @@ class CertificateAuthority:
         is_valid = self.sign_obj.verify(public_key, digest, signature)
 
         return is_valid
+
+    def verify_signature_rsa(self, data_bytes, signature, public_key_der):
+        """
+        Verify RSA signature using PKCS#1 v1.5
+
+        :param data_bytes: original data (bytes)
+        :param signature: signature to verify (bytes or bytearray)
+        :param public_key_der: RSA public key in DER format (bytes)
+        :return: True if signature is valid, False otherwise
+        """
+        from Crypto.Hash import SHA256
+        from Crypto.Signature import pkcs1_15
+        from Crypto.PublicKey import RSA
+
+        try:
+            # Reconstruct RSA public key from DER
+            rsa_public_key = RSA.import_key(bytes(public_key_der))
+            hash_obj = SHA256.new(data_bytes)
+            pkcs1_15.new(rsa_public_key).verify(hash_obj, bytes(signature))
+            return True
+        except (ValueError, TypeError, Exception):
+            return False
+
+    def detect_signature_scheme(self, signature, public_key=None):
+        """
+        Detect signature scheme based on signature length.
+        GOST 256-bit signature is 64 bytes, RSA-2048 is 256 bytes.
+
+        :param signature: signature bytes
+        :param public_key: public key bytes (unused, kept for compatibility)
+        :return: 'RSA' or 'GOST'
+        """
+        # RSA-2048 signature is 256 bytes, GOST is 64 bytes
+        if len(signature) > 100:
+            return 'RSA'
+        else:
+            return 'GOST'
+
+    def verify_signature_auto(self, data_bytes, signature, public_key):
+        """
+        Auto-detect signature scheme and verify.
+
+        :param data_bytes: original data (bytes)
+        :param signature: signature to verify (bytearray)
+        :param public_key: public key for verification (bytearray)
+        :return: True if signature is valid, False otherwise
+        """
+        scheme = self.detect_signature_scheme(signature, public_key)
+
+        if scheme == 'RSA':
+            return self.verify_signature_rsa(data_bytes, signature, public_key)
+        else:
+            return self.verify_signature(data_bytes, signature, public_key)
+
+    def process_certificate_request(self, csr):
+        """
+        Process Certificate Signing Request (CSR) from a member.
+        Verifies that the requester owns the private key by checking the CSR signature.
+
+        :param csr: Certificate Signing Request dict with:
+                    - member_name: participant name
+                    - member_public_key: hex string of public key
+                    - algorithm: key algorithm identifier
+                    - request_signature: signature proving private key ownership
+        :return: certificate dict if request is valid, None otherwise
+        """
+        member_name = csr.get("member_name")
+        member_public_key_hex = csr.get("member_public_key")
+        algorithm = csr.get("algorithm", "ECDH")
+        request_signature_hex = csr.get("request_signature")
+
+        # Validate CSR fields
+        if not all([member_name, member_public_key_hex, request_signature_hex]):
+            print(f"CA: Invalid CSR - missing required fields")
+            return None
+
+        # Convert public key and signature from hex
+        try:
+            member_public_key = bytearray.fromhex(member_public_key_hex)
+            request_signature = bytearray.fromhex(request_signature_hex)
+        except ValueError as e:
+            print(f"CA: Invalid CSR - hex decoding failed: {e}")
+            return None
+
+        # Verify the CSR signature (proof of private key ownership)
+        # Data that was signed: member_name + public_key + algorithm
+        request_data = {
+            "member_name": member_name,
+            "member_public_key": member_public_key_hex,
+            "algorithm": algorithm
+        }
+        data_to_verify = json.dumps(request_data, sort_keys=True).encode('utf-8')
+
+        # Auto-detect signature scheme (GOST or RSA) and verify
+        if not self.verify_signature_auto(data_to_verify, request_signature, member_public_key):
+            print(f"CA: CSR signature verification failed for {member_name} - private key ownership NOT proven")
+            return None
+
+        print(f"CA: CSR signature verified for {member_name} - private key ownership confirmed")
+
+        # Signature is valid - issue the certificate
+        certificate = self.create_certificate(
+            member_name=member_name,
+            member_public_key=member_public_key,
+            algorithm=algorithm,
+            days_valid=365
+        )
+
+        return certificate
 
     def create_certificate(
             self,
@@ -138,16 +247,23 @@ class CertificateAuthority:
 
         current_time = datetime.now()
 
+        # Detect key type based on public key length
+        # RSA-2048 DER-encoded public key is typically > 100 bytes, GOST is 64 bytes
+        if len(member_public_key) > 100:
+            key_algorithm = "RSA-2048"
+        else:
+            key_algorithm = "GOST-34.10-2012-256"
+
         certificate = {
             "serial_number": self.serial_counter,
-            "signature_algorithm": "GOST-512",
+            "signature_algorithm": "GOST-512",  # CA's signature algorithm
             "issuer": self.name,
             "validity": {
                 "not_before": current_time.isoformat(),
                 "not_after": (current_time + timedelta(days=days_valid)).isoformat()
             },
             "subject": member_name,
-            "subject_public_key_algorithm": algorithm,
+            "subject_public_key_algorithm": key_algorithm,  # Member's key algorithm
             "subject_public_key": member_public_key.hex(),
             "signature": "" # Initialized as empty
         }
@@ -157,7 +273,7 @@ class CertificateAuthority:
 
         # Data which is signed
         data_to_sign = json.dumps(cert_data, sort_keys=True).encode('utf-8')
-        
+
         # Signed by Aauthority
         signature = self.sign_data(data_to_sign)
         certificate["signature"] = signature.hex() # Updated signature
@@ -213,10 +329,10 @@ class CertificateAuthority:
             if cert["serial_number"] == serial_number:
                 cert_found = cert
                 break
-        
+
         if cert_found is None:
             return False
-        
+
         crl_instance = {
             "serial_number": serial_number,
             "revocation_date": datetime.now().isoformat(),
@@ -225,6 +341,74 @@ class CertificateAuthority:
         self.crl.append(crl_instance)
 
         return True
+
+    def process_revocation_request(self, revocation_request):
+        """
+        Process revocation request from a member.
+        Verifies that the requester owns the private key by checking the request signature.
+
+        :param revocation_request: revocation request dict with:
+                                   - member_name: participant name
+                                   - serial_number: certificate serial number to revoke
+                                   - reason: reason for revocation
+                                   - request_signature: signature proving private key ownership
+        :return: True if revocation successful, False otherwise
+        """
+        member_name = revocation_request.get("member_name")
+        serial_number = revocation_request.get("serial_number")
+        reason = revocation_request.get("reason", "KEY COMPROMISE")
+        request_signature_hex = revocation_request.get("request_signature")
+
+        # Validate request fields
+        if not all([member_name, serial_number, request_signature_hex]):
+            print(f"CA: Invalid revocation request - missing required fields")
+            return False
+
+        # Find the certificate to revoke
+        cert_found = None
+        for cert in self.certificates:
+            if cert["serial_number"] == serial_number:
+                cert_found = cert
+                break
+
+        if cert_found is None:
+            print(f"CA: Certificate No. {serial_number} not found")
+            return False
+
+        # Verify certificate belongs to the requester
+        if cert_found.get("subject") != member_name:
+            print(f"CA: Certificate No. {serial_number} does not belong to {member_name}")
+            return False
+
+        # Convert signature from hex
+        try:
+            request_signature = bytearray.fromhex(request_signature_hex)
+            member_public_key = bytearray.fromhex(cert_found["subject_public_key"])
+        except ValueError as e:
+            print(f"CA: Invalid revocation request - hex decoding failed: {e}")
+            return False
+
+        # Verify the revocation request signature (proof of private key ownership)
+        request_data = {
+            "member_name": member_name,
+            "serial_number": serial_number,
+            "reason": reason
+        }
+        data_to_verify = json.dumps(request_data, sort_keys=True).encode('utf-8')
+
+        if not self.verify_signature_auto(data_to_verify, request_signature, member_public_key):
+            print(f"CA: Revocation request signature verification failed for {member_name}")
+            return False
+
+        print(f"CA: Revocation request signature verified for {member_name}")
+
+        # Signature is valid - revoke the certificate
+        result = self.revoke_certificate(serial_number, reason)
+
+        if result:
+            print(f"CA: Certificate No. {serial_number} revoked for reason: {reason}")
+
+        return result
     
     def is_certificate_revoked(self, serial_number):
         for entry in self.crl:

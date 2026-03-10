@@ -4,38 +4,38 @@
     "signature_algorithm": "GOST-512",
     "issuer": "Test-CA-lab-1",
     "validity": {
-      "not_before": "2026-02-28T19:27:32.071130",
-      "not_after": "2027-02-28T19:27:32.071130"
+      "not_before": "2026-03-10T21:04:00.039208",
+      "not_after": "2027-03-10T21:04:00.039208"
     },
     "subject": "Alice",
-    "subject_public_key_algorithm": "ECDH",
-    "subject_public_key": "0ae7b69a069e276d08256317779fcde89ac4d3dc93cac67d87eea5b46d2bed82a21e2fb5c01783a1e3931e10f4e6ed0cd473727622d64ab4d4bc86a4ffed856c",
-    "signature": "a39f6ecb2407d08af31230f3429111cb372ac39e9a44f1c6acbef8a8dabb7c1b747ce148fc98634012e6410219beddd6ddf61a6c7f4172d2d752eaa93518ea0a"
+    "subject_public_key_algorithm": "GOST-34.10-2012-256",
+    "subject_public_key": "b06e9dd5047ecd1cd6eb6f071813ecabdd4ede61978fd1e52ced213dc7888999c19cfda33d52c775675644d03105dbb21afbaa685d33d784b5d74a84f7de54b5",
+    "signature": "5f370cc72ba882d1bc6f280cca9b457ce3be29d1f440d48f29e15ca88f19c666018ee0b5920e2cccf3c9064900872310fd5240a7160cc7be5e470dba44feeae5"
   },
   {
     "serial_number": 2,
     "signature_algorithm": "GOST-512",
     "issuer": "Test-CA-lab-1",
     "validity": {
-      "not_before": "2026-02-28T19:27:32.107023",
-      "not_after": "2027-02-28T19:27:32.107023"
+      "not_before": "2026-03-10T21:04:00.082036",
+      "not_after": "2027-03-10T21:04:00.082036"
     },
     "subject": "Bob",
-    "subject_public_key_algorithm": "ECDH",
-    "subject_public_key": "40d38e40ca7a6f5d53524e7224997908c92f0a8665948366290cae1193ce80b9c1e7c4568472018a365b7a93f69e56b056229aae8683e0bb2e58914e2b18c574",
-    "signature": "edaabba82eddedaa88db3ffcc1e4b2912613128490e41dd34da3dce3d1a1cd7a82e6c4442f6711dc0d5909901261d118fa257d54a3b5a75582313b442251a04c"
+    "subject_public_key_algorithm": "RSA-2048",
+    "subject_public_key": "30820122300d06092a864886f70d01010105000382010f003082010a0282010100baf1b9c6248ca3530392149704653f3c098891a0a4e74e096e995a56b9c0f41005e396ae3379df37637a2d11296fffef0cfdc8b9229546c24d86756b29abb640a9cf9b0aab3a086abd1cbbb19665b50559f444e0e36d0b85ed770014488ec01c0417f82c12bdb47611122201d0fb35d6a8ace7f2ae53a016ccf14a6c7caf3adbeefb3b162c51369b6ceb8aa7f74b9075671af02414be4cad2765838f16605f203a5152bad0e8fff36944e625f3a60112cba842fb94546715d5d2f81f77b2deb02e93eff9d58eb5c416d6cee7e2aad92c896dc30b2f8b5e7cdf4ffcccdf29c933c9bc4e6efc41c7f4e491d42f0ad29b890894abafd625ec6cbe6d04d0311c05c10203010001",
+    "signature": "ec76c94db60ab59019c6e99e97d70068503653a64a1aca4e804554ff8c502d51caffe1a07d14859fe7ce0ef1234cd259b21db55320a799f357da2225c6f7372f"
   },
   {
     "serial_number": 3,
     "signature_algorithm": "GOST-512",
     "issuer": "Test-CA-lab-1",
     "validity": {
-      "not_before": "2026-02-28T19:27:32.143301",
-      "not_after": "2027-02-28T19:27:32.143301"
+      "not_before": "2026-03-10T21:04:00.167551",
+      "not_after": "2027-03-10T21:04:00.167551"
     },
     "subject": "Eve",
-    "subject_public_key_algorithm": "ECDH",
-    "subject_public_key": "529ba343c6133b3189325e1a5791e5ddf10c562427c73c9f68258160974c8777b043d28060a77b2ee7a68bebd3131557ed647a7d93021954553c7e22f645442c",
-    "signature": "7edf41c6a185c0f826c2f97ee73e6d74bb37e7897436067206337d14c9f61f3accb3b1ebedc8b23ac0ee56cfabbc4f8d226fda6f46b8c0ff5c269f2b89fc33eb"
+    "subject_public_key_algorithm": "GOST-34.10-2012-256",
+    "subject_public_key": "3c73f638096af11b20ff54a27a00d56f31785e50c98a427ce33c46fb1ca235cca37301688ba3562c34052f7efb938e367489304ea7bb79730796b891ca2fdecd",
+    "signature": "6f1906e77a8dc9e3a1f890aeaaf2e490c6f4d3c0d87759f20a5772419047c39cc73845389d099e1d7495f836c71c1f9cd6d1d3bacdb6ed5e9e364c36d16e5d87"
   }
 ]

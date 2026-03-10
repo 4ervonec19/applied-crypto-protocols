@@ -18,18 +18,28 @@ def main():
     print(" " * 25 + "STEP 2: CREATE MEMBERS")
     print("=" * 80)
 
-    member1 = Member(name="Alice", ca=ca)
-    member2 = Member(name="Bob", ca=ca)
-    member3 = Member(name="Eve", ca=ca)
+    # Alice uses GOST scheme (with ECDH for key exchange)
+    member1 = Member(name="Alice", ca=ca, scheme=Member.SCHEME_GOST)
+    # Bob uses RSA scheme (with ECDH for key exchange)
+    member2 = Member(name="Bob", ca=ca, scheme=Member.SCHEME_RSA)
+    # Eve uses GOST scheme (for revocation test)
+    member3 = Member(name="Eve", ca=ca, scheme=Member.SCHEME_GOST)
 
-    print(f"Member 1: {member1.name}")
-    print(f"Member 1 public key: {member1.public_key.hex()[:32]}...")
+    print(f"\n{member1.name} (GOST + ECDH):")
+    print(f"  Signature public key size: {len(member1.public_key)} bytes")
+    print(f"  Signature public key: {member1.public_key.hex()[:32]}...")
+    ecdh_pub = member1.get_exchange_public_key()
+    print(f"  ECDH public key size: {len(ecdh_pub.export_key(format='DER'))} bytes")
 
-    print(f"Member 2: {member2.name}")
-    print(f"Member 2 public key: {member2.public_key.hex()[:32]}...")
+    print(f"\n{member2.name} (RSA + ECDH):")
+    print(f"  Signature public key size: {len(member2.public_key)} bytes")
+    print(f"  Signature public key: {member2.public_key.hex()[:32]}...")
+    ecdh_pub = member2.get_exchange_public_key()
+    print(f"  ECDH public key size: {len(ecdh_pub.export_key(format='DER'))} bytes")
 
-    print(f"Member 3: {member3.name}")
-    print(f"Member 3 public key: {member3.public_key.hex()[:32]}...")
+    print(f"\n{member3.name} (GOST + ECDH):")
+    print(f"  Public key size: {len(member3.public_key)} bytes")
+    print(f"  Public key: {member3.public_key.hex()[:32]}...")
 
     print("\n" + "=" * 80)
     print(" " * 25 + "STEP 3: REQUEST CERTIFICATES")
@@ -41,16 +51,19 @@ def main():
 
     print(f"\n{member1.name} certificate:")
     print(f"  Serial: {cert1['serial_number']}")
+    print(f"  Key Algorithm: {cert1['subject_public_key_algorithm']}")
     print(f"  Valid from: {cert1['validity']['not_before']}")
     print(f"  Valid until: {cert1['validity']['not_after']}")
 
     print(f"\n{member2.name} certificate:")
     print(f"  Serial: {cert2['serial_number']}")
+    print(f"  Key Algorithm: {cert2['subject_public_key_algorithm']}")
     print(f"  Valid from: {cert2['validity']['not_before']}")
     print(f"  Valid until: {cert2['validity']['not_after']}")
 
     print(f"\n{member3.name} certificate:")
     print(f"  Serial: {cert3['serial_number']}")
+    print(f"  Key Algorithm: {cert3['subject_public_key_algorithm']}")
     print(f"  Valid from: {cert3['validity']['not_before']}")
     print(f"  Valid until: {cert3['validity']['not_after']}")
 
@@ -68,33 +81,94 @@ def main():
     print(f"{member3.name}: {msg3} (Valid: {valid3})")
 
     print("\n" + "=" * 80)
-    print(" " * 25 + "STEP 5: SIGN AND VERIFY DATA")
+    print(" " * 25 + "STEP 5: SIGN AND VERIFY DATA (Cross-Scheme)")
     print("=" * 80)
 
+    # Alice (GOST) signs, Bob (RSA) verifies
     message = b"Hello from Alice!"
-    print(f"\n{member1.name} signs: {message.decode()}")
+    print(f"\n{member1.name} (GOST) signs: {message.decode()}")
 
     signature = member1.sign_data(message)
-    print(f"Signature: {signature.hex()[:64]}...")
+    print(f"Signature ({len(signature)} bytes): {signature.hex()[:64]}...")
 
-    print(f"\n{member2.name} verifies {member1.name}'s signature...")
+    print(f"\n{member2.name} (RSA) verifies {member1.name}'s signature...")
     is_valid = member2.verify_with_cert(message, signature, member1.name)
     print(f"Result: {is_valid}")
 
-    print(f"\n{member3.name} tries to forge a message...")
-    forged_message = b"Hello from Alice!"
-    forged_signature = member3.sign_data(forged_message)
+    # Bob (RSA) signs, Alice (GOST) verifies
+    message2 = b"Hello from Bob!"
+    print(f"\n{member2.name} (RSA) signs: {message2.decode()}")
 
-    print(f"{member2.name} verifies forged signature...")
-    is_forged_valid = member2.verify_with_cert(forged_message, forged_signature, member1.name)
-    print(f"Forged signature valid: {is_forged_valid}")
+    signature2 = member2.sign_data(message2)
+    print(f"Signature ({len(signature2)} bytes): {signature2.hex()[:64]}...")
+
+    print(f"\n{member1.name} (GOST) verifies {member2.name}'s signature...")
+    is_valid2 = member1.verify_with_cert(message2, signature2, member2.name)
+    print(f"Result: {is_valid2}")
 
     print("\n" + "=" * 80)
-    print(" " * 25 + "STEP 6: CERTIFICATE REVOCATION")
+    print(" " * 25 + "STEP 6: ECDH KEY EXCHANGE + ENCRYPTION")
     print("=" * 80)
 
-    print(f"\nCA revokes {member3.name}'s certificate...")
-    ca.revoke_certificate(cert3['serial_number'], reason="KEY COMPROMISE")
+    # Verify certificates before key exchange
+    print(f"\nVerifying certificates before ECDH key exchange...")
+    valid1, msg1 = ca.verify_certificate(cert1)
+    valid2, msg2 = ca.verify_certificate(cert2)
+    print(f"  {member1.name}: {msg1} (Valid: {valid1})")
+    print(f"  {member2.name}: {msg2} (Valid: {valid2})")
+
+    # Alice computes shared secret (with certificate verification)
+    print(f"\n{member1.name} computes shared secret (with cert verification)...")
+    alice_shared = member1.compute_shared_secret_with_cert_verify(member2)
+    if alice_shared:
+        print(f"  Alice's shared secret: {alice_shared.hex()}")
+
+    # Bob computes shared secret (with certificate verification)
+    print(f"\n{member2.name} computes shared secret (with cert verification)...")
+    bob_shared = member2.compute_shared_secret_with_cert_verify(member1)
+    if bob_shared:
+        print(f"  Bob's shared secret:   {bob_shared.hex()}")
+
+    if alice_shared and bob_shared:
+        print(f"\nShared secrets match: {alice_shared == bob_shared}")
+
+        # ENCRYPTION TEST
+        print("\n" + "-" * 80)
+        print(" " * 20 + "ENCRYPTION / DECRYPTION TEST")
+        print("-" * 80)
+
+        # Alice encrypts a message using the shared secret
+        secret_message = b"Top secret message from Alice to Bob!"
+        print(f"\n{member1.name} encrypts: {secret_message.decode()}")
+        encrypted = member1.encrypt_with_shared_secret(secret_message, alice_shared)
+        print(f"Encrypted ({len(encrypted)} bytes): {encrypted.hex()[:64]}...")
+
+        # Bob decrypts the message using the same shared secret
+        print(f"\n{member2.name} decrypts the message...")
+        decrypted = member2.decrypt_with_shared_secret(encrypted, bob_shared)
+        print(f"Decrypted: {decrypted.decode()}")
+
+        print(f"\nDecryption successful: {decrypted == secret_message}")
+
+        # Bob encrypts a response
+        response_message = b"Secret response from Bob to Alice!"
+        print(f"\n{member2.name} encrypts: {response_message.decode()}")
+        bob_encrypted = member2.encrypt_with_shared_secret(response_message, bob_shared)
+        print(f"Encrypted ({len(bob_encrypted)} bytes): {bob_encrypted.hex()[:64]}...")
+
+        # Alice decrypts the response
+        print(f"\n{member1.name} decrypts the response...")
+        alice_decrypted = member1.decrypt_with_shared_secret(bob_encrypted, alice_shared)
+        print(f"Decrypted: {alice_decrypted.decode()}")
+
+        print(f"\nDecryption successful: {alice_decrypted == response_message}")
+
+    print("\n" + "=" * 80)
+    print(" " * 25 + "STEP 7: CERTIFICATE REVOCATION (Protocol)")
+    print("=" * 80)
+
+    print(f"\n{member3.name} requests revocation of own certificate...")
+    revocation_result = member3.request_revocation(reason="KEY COMPROMISE")
 
     print(f"\nVerifying {member3.name}'s certificate after revocation...")
     valid3_after, msg3_after = ca.verify_certificate(cert3)
@@ -107,19 +181,8 @@ def main():
     for entry in crl['revoked_certificates']:
         print(f"    - Serial {entry['serial_number']}: {entry['reason']}")
 
-    message_after_revocation = b"Hello from Eve (after revocation)!"
-    signature_after_revocation = member3.sign_data(message_after_revocation)
-
-    print(f"\n{member2.name} verifies {member3.name}'s signature after revocation...")
-    is_after_revocation_valid = member2.verify_with_cert(
-        message_after_revocation,
-        signature_after_revocation,
-        member3.name
-    )
-    print(f"Signature valid after revocation: {is_after_revocation_valid}")
-
     print("\n" + "=" * 80)
-    print(" " * 25 + "STEP 7: SAVE DATA TO FILES")
+    print(" " * 25 + "STEP 8: SAVE DATA TO FILES")
     print("=" * 80)
 
     ca.save_to_files()
@@ -127,6 +190,10 @@ def main():
     print(f"  - {ca.ca_info_file}")
     print(f"  - {ca.repo_file}")
     print(f"  - {ca.crl_file}")
+
+    print("\n" + "=" * 80)
+    print(" " * 25 + "READY!")
+    print("=" * 80)
 
 
 if __name__ == "__main__":

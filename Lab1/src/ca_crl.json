@@ -1,14 +1,14 @@
 {
   "signature_algorithm": "ГОСТ-512",
   "issuer": "Test-CA-lab-1",
-  "this_update": "2026-02-28T19:27:32.785448",
-  "next_update": "2026-03-07T19:27:32.785448",
+  "this_update": "2026-03-10T21:04:01.019701",
+  "next_update": "2026-03-17T21:04:01.019701",
   "revoked_certificates": [
     {
       "serial_number": 3,
-      "revocation_date": "2026-02-28T19:27:32.715757",
+      "revocation_date": "2026-03-10T21:04:00.997276",
       "reason": "KEY COMPROMISE"
     }
   ],
-  "signature": "6266a1d6e8f449cc3639b7a8f7d2e6afda8652191b3035167de569805325af633114a95e958596ee0c00df465dab75be9d26099505f54ac416e31b26086aa04c"
+  "signature": "ad25d746598d6e60f80467dfde0b998a645e2627205898249e2ed127c63aaf2aef0b95616c762de42b0d78a36913045ed72c6b6802b45acf99f29700acc26883"
 }
