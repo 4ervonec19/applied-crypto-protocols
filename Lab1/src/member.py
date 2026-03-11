@@ -204,6 +204,7 @@ class Member:
         """
         Request certificate from CA by sending a signed CSR.
         CA will verify the signature before issuing the certificate.
+        After receiving the certificate, verifies CA's signature.
 
         :return: certificate dict or None if CA not available
         """
@@ -218,7 +219,15 @@ class Member:
         self.certificate = self.ca.process_certificate_request(csr)
 
         if self.certificate:
+            # Verify that the certificate was signed by the expected CA
+            is_valid, msg = self.ca.verify_certificate(self.certificate)
+            if not is_valid:
+                print(f"{self.name}: Certificate verification FAILED: {msg}")
+                self.certificate = None
+                return None
+
             print(f"{self.name}: Certificate acquired successfully (No. {self.certificate['serial_number']})")
+            print(f"{self.name}: CA signature verified: {msg}")
         else:
             print(f"{self.name}: Certificate request rejected by CA")
 
