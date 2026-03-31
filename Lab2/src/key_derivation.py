@@ -27,7 +27,6 @@ class KeyDerivator:
         self._k1 = hmac_gost(self._master_key, VECTOR_1)
         self._k2 = hmac_gost(self._master_key, VECTOR_2)
 
-        # Уничтожить master_key сразу после использования
         self._master_key = b'\x00' * len(self._master_key)
         self._master_key = None
 

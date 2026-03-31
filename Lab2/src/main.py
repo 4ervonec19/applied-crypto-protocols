@@ -23,6 +23,7 @@ def test_add_passwords():
     manager.add_password("google.com", "google_pass")
     manager.add_password("ozon.com", "qwerty")
     manager.add_password("vk.com", "password-for-vk")
+    manager.add_password("yandex.ru", "secret123")
 
     manager.logout()
 
@@ -37,9 +38,10 @@ def test_get_password():
     manager.add_password("google.com", "google_pass")
     manager.add_password("ozon.com", "qwerty")
     manager.add_password("vk.com", "password-for-vk")
+    manager.add_password("yandex.ru", "secret123")
 
-    pwd = manager.get_password("vk.com")
-    assert pwd == "password-for-vk"
+    pwd = manager.get_password("yandex.ru")
+    assert pwd == "secret123"
     manager.logout()
 
 
@@ -82,7 +84,6 @@ def test_delete_password():
 def test_negative_scenarios():
     print_header("TEST 5: Negative scenarios")
     
-    # 1. Неправильный мастер-пароль
     print("\n1. Wrong master password:")
     manager = PasswordManager()
     manager.init("wrong_password")
@@ -164,7 +165,6 @@ def test_rollback_attack():
 def test_swap_attack():
     print_header("TEST 7: Swap Attack Demonstration")
 
-    # Очищаем файлы перед тестом
     for f in ["salt.bin", "passwords.db", "integrity.hash"]:
         if os.path.exists(f):
             os.remove(f)
