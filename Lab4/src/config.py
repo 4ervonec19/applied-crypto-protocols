@@ -1,0 +1,25 @@
+# Cipher suites
+CIPHER_SUITE_AES_GCM_SHA256 = "TLS_AES_256_GCM_SHA256"
+CIPHER_SUITE_ECDHE_ECDSA = "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+SUPPORTED_CIPHER_SUITES = [CIPHER_SUITE_AES_GCM_SHA256, CIPHER_SUITE_ECDHE_ECDSA]
+
+# Key sizes
+KEY_SIZE = 32
+NONCE_SIZE = 12
+HANDSHAKE_NONCE_SIZE = 32
+
+# HKDF info strings
+HKDF_INFO_HANDSHAKE = b"tls13 handshake keys"
+HKDF_INFO_CLIENT_TRAFFIC = b"tls13 client traffic secret"
+HKDF_INFO_SERVER_TRAFFIC = b"tls13 server traffic secret"
+HKDF_INFO_KEY_UPDATE = b"tls13 key update"
+
+# Auth modes
+AUTH_MODE_MUTUAL = "mutual"
+AUTH_MODE_ONE_WAY = "one_way"
+
+# Participant names
+CA_NAME = "Lab4-CA"
+SERVER_NAME = "Server"
+CLIENT1_NAME = "Client1"
+CLIENT2_NAME = "Client2"
